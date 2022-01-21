@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  jinak:
+    build:
+      context: ./..
+      dockerfile: ./Jinak/Dockerfile
+    volumes:
+      - ./config.json:/app/config.json:rw
+    restart: unless-stopped
