@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jinak", "Jinak\Jinak.csproj", "{BBAF3618-D1CF-453A-912F-5133FB83461C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ozse.Net", "Ozse.Net\Ozse.Net.csproj", "{B8E2470E-4288-47E4-BE3E-36B29481136E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,13 @@ Global
 		{BBAF3618-D1CF-453A-912F-5133FB83461C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BBAF3618-D1CF-453A-912F-5133FB83461C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BBAF3618-D1CF-453A-912F-5133FB83461C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C638DCCE-3676-442B-9BD3-2A21EA137487}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C638DCCE-3676-442B-9BD3-2A21EA137487}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C638DCCE-3676-442B-9BD3-2A21EA137487}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C638DCCE-3676-442B-9BD3-2A21EA137487}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8E2470E-4288-47E4-BE3E-36B29481136E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8E2470E-4288-47E4-BE3E-36B29481136E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8E2470E-4288-47E4-BE3E-36B29481136E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8E2470E-4288-47E4-BE3E-36B29481136E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

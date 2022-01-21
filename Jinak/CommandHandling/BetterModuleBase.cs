@@ -1,6 +1,10 @@
-﻿namespace Jinak;
+﻿using Discord;
+using Discord.Commands;
 
-public class BetterModuleBase
+namespace Jinak.CommandHandling;
+
+public class BetterModuleBase : ModuleBase<BetterSocketCommandContext>
 {
-    
+    public Task ConfirmReact()
+        => Context.Message.AddReactionAsync(new Emoji("✅"));
 }

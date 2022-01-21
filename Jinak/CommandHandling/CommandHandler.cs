@@ -3,18 +3,19 @@ using System.Text.RegularExpressions;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Jinak.Utility.Help;
 
-namespace Jinak;
+namespace Jinak.CommandHandling;
 
 public class CommandHandler
 {
-    private readonly DiscordShardedClient _client;
-    public readonly CommandService _commands;
+    private readonly DiscordSocketClient _client;
+    public readonly CommandService Service;
 
     // Retrieve client and CommandService instance via ctor
-    public CommandHandler(DiscordShardedClient client, CommandService commands)
+    public CommandHandler(DiscordSocketClient client, CommandService service)
     {
-        _commands = commands;
+        Service = service;
         _client = client;
     }
 
@@ -22,7 +23,7 @@ public class CommandHandler
     {
         // Hook the MessageReceived event into our command handler
         _client.MessageReceived += HandleCommandAsync;
-        _commands.CommandExecuted += _commands_CommandExecuted;
+        Service.CommandExecuted += CommandExecuted;
         // Here we discover all of the command modules in the entry 
         // assembly and load them. Starting from Discord.NET 2.0, a
         // service provider is required to be passed into the
@@ -31,33 +32,33 @@ public class CommandHandler
         //
         // If you do not use Dependency Injection, pass null.
         // See Dependency Injection guide for more information.
-        await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
+        await Service.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
             services: null);
     }
 
-    private async Task _commands_CommandExecuted(Optional<CommandInfo> command, ICommandContext contextNon,
+    private async Task CommandExecuted(Optional<CommandInfo> command, ICommandContext contextNon,
         IResult result)
     {
         var context = (BetterSocketCommandContext)contextNon;
-        // handle memory leaks by gif commands
-        if (command.IsSpecified
-            && (command.Value.Attributes.Any(a => a.GetType() == typeof(ReleaseImageSharpResources))
-                | command.Value.Module.Attributes.Any(a => a.GetType() == typeof(ReleaseImageSharpResources))))
-        {
-            SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
-        }
+        // // handle memory leaks by gif commands
+        // if (command.IsSpecified
+        //     && (command.Value.Attributes.Any(a => a.GetType() == typeof(ReleaseImageSharpResources))
+        //         | command.Value.Module.Attributes.Any(a => a.GetType() == typeof(ReleaseImageSharpResources))))
+        // {
+        //     SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
+        // }
 
         if (!result.IsSuccess)
         {
             if (result.Error == CommandError.Exception && result is ExecuteResult execResult)
             {
                 // exception occurred while handling command
-                Logger.LogException(execResult.Exception);
-                if (execResult.Exception is IFriendlyException friendlyException)
-                {
-                    await context.Message.Channel.SendMessageAsync(embed: friendlyException.GetEmbed());
-                }
-                else
+                Console.Exception(execResult.Exception);
+                // if (execResult.Exception is IFriendlyException friendlyException)
+                // {
+                //     await context.Message.Channel.SendMessageAsync(embed: friendlyException.GetEmbed());
+                // }
+                // else
                 {
                     var msg = await context.Message.Channel.SendMessageAsync(embed: new EmbedBuilder()
                     {
@@ -66,42 +67,42 @@ public class CommandHandler
 ```{execResult.Exception.Message}```",
                         Color = Color.Red
                     }.Build());
-                    var rec = new ReactableMessage(msg, (con, react) =>
-                    {
-                        if (react.Emote.Name == "🛠️")
-                        {
-                            if (Settings.BotSettings.Devs.Contains(react.UserId))
-                            {
-                                return msg.ModifyAsync(m => m.Embed = new EmbedBuilder()
-                                {
-                                    Title = "Developer exception information",
-                                    Description = $@"Message: ```{execResult.Exception.Message}```
-Source: `{execResult.Exception.Source}`
-TargetSite name: `{execResult.Exception.TargetSite?.Name}`
-TargetSite module: `{execResult.Exception.TargetSite?.Module}`
-HRESULT: `{execResult.Exception.HResult}`
-Help link: `{execResult.Exception.HelpLink}`",
-                                    Color = new Color(47, 49, 54)
-                                }.Build());
-                            }
-                        }
-
-                        if (react.Emote.Name == "🪜")
-                        {
-                            if (Settings.BotSettings.Devs.Contains(react.UserId))
-                            {
-                                return msg.ModifyAsync(m => m.Embed = new EmbedBuilder()
-                                {
-                                    Title = "Developer exception information - StackTrace",
-                                    Description = $@"```{execResult.Exception.StackTrace}```",
-                                    Color = new Color(47, 49, 54)
-                                }.Build());
-                            }
-                        }
-
-                        return Task.CompletedTask;
-                    });
-                    Reactables.Add(rec);
+//                     var rec = new ReactableMessage(msg, (con, react) =>
+//                     {
+//                         if (react.Emote.Name == "🛠️")
+//                         {
+//                             if (Settings.BotSettings.Devs.Contains(react.UserId))
+//                             {
+//                                 return msg.ModifyAsync(m => m.Embed = new EmbedBuilder()
+//                                 {
+//                                     Title = "Developer exception information",
+//                                     Description = $@"Message: ```{execResult.Exception.Message}```
+// Source: `{execResult.Exception.Source}`
+// TargetSite name: `{execResult.Exception.TargetSite?.Name}`
+// TargetSite module: `{execResult.Exception.TargetSite?.Module}`
+// HRESULT: `{execResult.Exception.HResult}`
+// Help link: `{execResult.Exception.HelpLink}`",
+//                                     Color = new Color(47, 49, 54)
+//                                 }.Build());
+//                             }
+//                         }
+//
+//                         if (react.Emote.Name == "🪜")
+//                         {
+//                             if (Settings.BotSettings.Devs.Contains(react.UserId))
+//                             {
+//                                 return msg.ModifyAsync(m => m.Embed = new EmbedBuilder()
+//                                 {
+//                                     Title = "Developer exception information - StackTrace",
+//                                     Description = $@"```{execResult.Exception.StackTrace}```",
+//                                     Color = new Color(47, 49, 54)
+//                                 }.Build());
+//                             }
+//                         }
+//
+//                         return Task.CompletedTask;
+//                     });
+//                     Reactables.Add(rec);
                 }
             }
             else if (result.Error == CommandError.BadArgCount | result.Error == CommandError.ParseFailed)
@@ -111,11 +112,11 @@ Help link: `{execResult.Exception.HelpLink}`",
             }
             else if (result.Error == CommandError.UnmetPrecondition)
             {
-                if (result is BetterPreconditionResult result1)
-                {
-                    await context.Message.Channel.SendMessageAsync(embed: result1.GetEmbed());
-                }
-                else
+                // if (result is BetterPreconditionResult result1)
+                // {
+                //     await context.Message.Channel.SendMessageAsync(embed: result1.GetEmbed());
+                // }
+                // else
                 {
                     var res = result as PreconditionResult;
                     // check if is a permission unable gett'd
@@ -162,24 +163,24 @@ Help link: `{execResult.Exception.HelpLink}`",
                     }
                 }
             }
-            else if (result.Error == CommandError.UnknownCommand)
-            {
-                var content = context.Message.Content;
-                if (content.StartsWith(context.Prefix))
-                {
-                    content = content.Remove(0, context.Prefix.Length);
-                }
-
-                int argPos = 0;
-                if (context.Message.HasMentionPrefix(_client.CurrentUser, ref argPos))
-                {
-                    content = content.Remove(0, argPos);
-                }
-
-                if (content.EndsWith(" help"))
-                    content = content.Remove(content.IndexOf(" help", StringComparison.Ordinal));
-                await Program.SendHelpPage(content, context.Channel);
-            }
+            // else if (result.Error == CommandError.UnknownCommand)
+            // {
+            //     var content = context.Message.Content;
+            //     if (content.StartsWith(context.Prefix))
+            //     {
+            //         content = content.Remove(0, context.Prefix.Length);
+            //     }
+            //
+            //     int argPos = 0;
+            //     if (context.Message.HasMentionPrefix(_client.CurrentUser, ref argPos))
+            //     {
+            //         content = content.Remove(0, argPos);
+            //     }
+            //
+            //     if (content.EndsWith(" help"))
+            //         content = content.Remove(content.IndexOf(" help", StringComparison.Ordinal));
+            //     await Program.SendHelpPage(content, context.Channel);
+            // }
             else
             {
                 await context.Message.Channel.SendMessageAsync($"{result.Error}: {result.ErrorReason}");
@@ -196,43 +197,32 @@ Help link: `{execResult.Exception.HelpLink}`",
         if (message == null) return;
         // Create context
         var context = new BetterSocketCommandContext(_client, message);
-        var prefix = context.ServerSettings.Prefix ?? Program.prefix;
+        // var prefix = context.ServerSettings.Prefix ?? Program.prefix;
+        // todo(parity): custom prefixes
+        var prefix = "if~";
         // Create a number to track where the prefix ends and the command begins
         int argPos = prefix.Length;
         // Determine if the message is a command based on the prefix and make sure no bots trigger commands
         if (!(message.Content.StartsWith(prefix)
-#if !DEBUG
-                || message.HasMentionPrefix(_client.CurrentUser, ref argPos)
-#endif
+              || message.HasMentionPrefix(_client.CurrentUser, ref argPos)
                 )
             || message.Author.IsBot
            )
         {
 #pragma warning disable 4014
-            AzurGame.HandleMessage(context);
+            // AzurGame.HandleMessage(context);
 #pragma warning restore 4014
             return;
         }
 
         context.Prefix = message.Content[..argPos];
 
-        // check if user is not blacklisted
-        if (Settings.BotSettings.BlackListedPeople.Contains(messageParam.Author.Id))
-        {
-            var emote = Program.client.GetGuild(749601186155462748).Emotes.First(e => e.Name == "sexKnuckles");
-            await messageParam.AddReactionAsync(emote);
-            return;
-        }
-
-        if (Settings.Locked)
-        {
-            if (!Settings.BotSettings.Devs.Contains(context.User.Id))
-                return;
-        }
+        // todo(parity): blacklist
+        // todo(parity): bot lockdown
 
         // Execute the command with the command context we just
         // created, along with the service provider for precondition checks.
-        var result = await _commands.ExecuteAsync(
+        var result = await Service.ExecuteAsync(
             context: context,
             argPos: argPos,
             services: null);
@@ -246,7 +236,7 @@ Help link: `{execResult.Exception.HelpLink}`",
     /// <returns></returns>
     public CommandInfo[] GetCommands(string name)
         // todo(cleanup): this is a mess
-        => _commands.Commands
+        => Service.Commands
             .Where((command) => command.Aliases.Any(a => a.ToLower().Contains(name.ToLower()))).ToArray();
 
     // todo(parity): port all
