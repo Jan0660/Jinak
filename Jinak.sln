@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jinak", "Jinak\Jinak.csproj", "{BBAF3618-D1CF-453A-912F-5133FB83461C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BBAF3618-D1CF-453A-912F-5133FB83461C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBAF3618-D1CF-453A-912F-5133FB83461C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBAF3618-D1CF-453A-912F-5133FB83461C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBAF3618-D1CF-453A-912F-5133FB83461C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
