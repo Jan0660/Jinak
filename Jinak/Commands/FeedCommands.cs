@@ -101,6 +101,22 @@ public class FeedCommands : BetterModuleBase
                 };
                 break;
             }
+            case "twitter":
+            {
+                // todo: check valid user
+                job = new()
+                {
+                    Name = "twitter",
+                    Timer = 10 * 60,
+                    AllowTaskDuplicates = false,
+                    Data = new()
+                    {
+                        ["name"] = args,
+                        ["lastId"] = "1",
+                    }
+                };
+                break;
+            }
             default:
             {
                 await ReplyAsync("what");
@@ -115,7 +131,7 @@ public class FeedCommands : BetterModuleBase
             GuildId = Context.Guild.Id,
             JobId = job.Id
         }).PerfLog("feed sub insert");
-        Console.Log(job);
+        Console.Debug(job);
         await ReplyAsync("h");
     }
 }

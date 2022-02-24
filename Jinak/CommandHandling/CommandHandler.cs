@@ -53,7 +53,8 @@ public class CommandHandler
             if (result.Error == CommandError.Exception && result is ExecuteResult execResult)
             {
                 // exception occurred while handling command
-                Console.Exception(execResult.Exception);
+                // todo: HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+                // Console.Exception(execResult.Exception);
                 // if (execResult.Exception is IFriendlyException friendlyException)
                 // {
                 //     await context.Message.Channel.SendMessageAsync(embed: friendlyException.GetEmbed());

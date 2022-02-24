@@ -12,9 +12,11 @@ public class BasicCommands : BetterModuleBase
     {
         var stopwatch = Stopwatch.StartNew();
         var msg = await ReplyAsync("Measuring...");
-        stopwatch.Stop();
+        var messagePing = stopwatch.ElapsedMilliseconds;
         var mongoPing = await Mongo.Ping();
-        // todo: ping for Ozse
+        stopwatch.Restart();
+        await FeedSvc.Client.Http.GetAsync("/");
+        var ozsePing = stopwatch.ElapsedMilliseconds;
         await msg.ModifyAsync(x => (x.Content, x.Embed) = (null, new EmbedBuilder()
         {
             Title = "Pong!",
@@ -24,12 +26,12 @@ public class BasicCommands : BetterModuleBase
                 {
                     IsInline = true,
                     Name = "Message",
-                    Value = $"{stopwatch.ElapsedMilliseconds}ms"
+                    Value = $"{messagePing}ms"
                 },
                 new()
                 {
                     IsInline = true,
-                    Name = "Whatever Discord",
+                    Name = "WebSocket",
                     Value = $"{Context.Client.Latency}ms"
                 },
                 new()
@@ -37,7 +39,13 @@ public class BasicCommands : BetterModuleBase
                     IsInline = true,
                     Name = "MongoDB",
                     Value = $"{mongoPing}ms"
-                }
+                },
+                new()
+                {
+                    IsInline = true,
+                    Name = "Ozse",
+                    Value = $"{ozsePing}ms"
+                },
             }
         }.Build()));
     }

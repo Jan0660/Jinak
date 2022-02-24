@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  jinak:
+    build:
+      context: ./
+      dockerfile: ./Jinak/Dockerfile
+    volumes:
+      - ./Jinak/config.json:/app/config.json:rw
+    restart: unless-stopped
+    networks:
+      - ozse
+  ozse-master:
+    image: ghcr.io/jan0660/ozse-master:master
+    volumes:
+      - ./config/ozse-master.yaml:/app/config.yaml:r
+    restart: unless-stopped
+    networks:
+      - ozse
+  ozse-worker:
+    image: ghcr.io/jan0660/ozse-worker:master
+    volumes:
+      - ./config/ozse-worker.yaml:/app/config.yaml:r
+    restart: unless-stopped
+    networks:
+      - ozse
+
+networks:
+  ozse: {}

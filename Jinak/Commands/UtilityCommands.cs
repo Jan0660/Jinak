@@ -57,7 +57,7 @@ public class UtilityCommands : BetterModuleBase
             embed = new()
             {
                 Title = "WEEB DETECTED",
-                Description = $"{user.Username} is a **WEEB**!",
+                Description = $"{user} is a **WEEB**!",
                 Color = Color.Green,
             };
         else
@@ -65,7 +65,7 @@ public class UtilityCommands : BetterModuleBase
             {
                 Title = "BAD",
                 Description =
-                    $"{user.Username} is **NOT** a **WEEB**!",
+                    $"{user} is **NOT** a **WEEB**!",
                 Color = Color.Red,
             };
         embed.WithFooter($"Certainty: {certainty}% Evaluated in {evaluationTime}ms");

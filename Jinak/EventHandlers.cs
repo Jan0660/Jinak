@@ -7,7 +7,8 @@ public static class EventHandlers
 {
     public static Task Log(LogMessage arg)
     {
-        Console.Log(Program.DiscordMessageType, arg.Message, new DiscordLogInfoContext() { Message = arg });
+        Console.Logger.PreWrite(arg.Message, Program.DiscordLogType, true,
+            new DiscordLogPreContext { Message = arg });
         return Task.CompletedTask;
     }
 
@@ -18,13 +19,27 @@ public static class EventHandlers
     }
 }
 
-public class DiscordLogInfo : ILogInfo
+public class DiscordLogPre : LogPre
 {
-    public string GetValue(LogInfoContext context)
+    public override Style? Style { get; set; } = new();
+
+    public override bool Write(in LogContext context, ref SpanStringBuilder builder)
     {
-        if (context is DiscordLogInfoContext c)
+        if (context.ExtraContext is DiscordLogPreContext c)
+            builder.Append(c.Message.Severity.ToString() ?? "sus");
+        else
+            System.Console.Write("H");
+        return true;
+    }
+
+    public override void SetStyle(in LogContext context)
+    {
+        Style ??= new();
+        if (context.ExtraContext is DiscordLogPreContext c)
         {
-            Style.Color = c.Message.Severity switch
+            if(c.Message.Exception != null)
+                Console.Error(c.Message.Exception);
+            Style.ForegroundColor = c.Message.Severity switch
             {
                 LogSeverity.Critical => Color.DarkRed,
                 LogSeverity.Error => Color.Red,
@@ -34,18 +49,11 @@ public class DiscordLogInfo : ILogInfo
                 LogSeverity.Debug => Color.White,
                 _ => Color.White
             };
-            return c.Message.Severity.ToString().ToUpper() ?? "sus";
         }
-        else
-            System.Console.Write("H");
-
-        return "what";
     }
-
-    public ConsoleStyleOption Style { get; set; } = new();
 }
 
-class DiscordLogInfoContext : LogInfoContext
+class DiscordLogPreContext
 {
     public LogMessage Message { get; init; }
 }

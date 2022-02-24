@@ -28,7 +28,8 @@ public static class FeedSvc
                         continue;
                     }
 
-                    foreach (var result in results)
+                    // reverse so that oldest are handled first
+                    foreach (var result in results.Reverse())
                     {
                         var job = await Client.GetJobAsync(result.JobId);
                         var feedSettings = Mongo.FeedCollection.GetOne(f => f.JobId == job.Id);
@@ -173,6 +174,13 @@ This release comes with {release.Assets.Length} assets.
                                 }.Build());
                                 break;
                             }
+                            case "twitter":
+                            {
+                                var data = (TwitterResult)result.ParseData()!;
+                                // todo: something for quote/retweets?
+                                await channel.SendMessageAsync(data.Tweet.PermanentUrl);
+                                break;
+                            }
                             default:
                             {
                                 await channel.SendMessageAsync($"{result.Id}: {result.Data["link"]}");
@@ -187,7 +195,7 @@ This release comes with {release.Assets.Length} assets.
                 }
                 catch (Exception ex)
                 {
-                    Console.Exception(ex);
+                    // Console.Exception(ex);
                 }
 
                 await Task.Delay(1000);

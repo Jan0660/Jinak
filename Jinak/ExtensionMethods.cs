@@ -40,6 +40,7 @@ public static class ExtensionMethods
 #endif
         return task;
     }
+
     public static Task<T> PerfLog<T>(this Task<T> task, string name)
     {
 #if DEBUG
@@ -52,4 +53,7 @@ public static class ExtensionMethods
 #endif
         return task;
     }
+
+    public static Discord.Color? ToDiscordColor(this System.Drawing.Color? color)
+        => color.HasValue ? new(color.Value.R, color.Value.G, color.Value.B) : null;
 }
