@@ -9,7 +9,7 @@ using Discord.Commands;
 using Discord.Webhook;
 using Jinak.CommandHandling;
 using Log73.LogPres;
-using Ozse;
+using Log73.Serialization.NewtonsoftJson;
 
 namespace Jinak;
 
@@ -64,6 +64,7 @@ public static class Program
             Console.Logger.AnsiConsoleLogFunction(context);
         };
         DiscordLogType.LogPres!.Add(new DiscordLogPre());
+        Console.Configure.UseNewtonsoftJson();
 
         #endregion
 
