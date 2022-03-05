@@ -1,4 +1,7 @@
-﻿using Discord.Commands;
+﻿using System.Net.Http.Json;
+using System.Security.Cryptography;
+using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using Jinak.CommandHandling;
 using Ozse;
@@ -124,14 +127,54 @@ public class FeedCommands : BetterModuleBase
             }
         }
 
-        job = await FeedSvc.Client.CreateJobAsync(job).PerfLog("create job");
-        await Mongo.FeedCollection.InsertOneAsync(new FeedSettings()
+        IUserMessage? msg = null;
+        async Task callback()
         {
-            ChannelId = channel.Id,
-            GuildId = Context.Guild.Id,
-            JobId = job.Id
-        }).PerfLog("feed sub insert");
-        Console.Debug(job);
-        await ReplyAsync("h");
+            job = await FeedSvc.Client.CreateJobAsync(job).PerfLog("create job");
+            await Mongo.FeedCollection.InsertOneAsync(new FeedSettings()
+            {
+                ChannelId = channel.Id,
+                GuildId = Context.Guild.Id,
+                JobId = job.Id,
+            }).PerfLog("feed sub insert");
+            Console.Debug(job);
+            var embed = new EmbedBuilder()
+            {
+                Title = "Feed Subscribed",
+                Description = $"{job.Name} feed subscribed to {channel.Mention}",
+                Color = Color.Green,
+            }.Build();
+            if (msg == null)
+                await ReplyAsync(embed: embed);
+            else
+                await msg.ModifyAsync(m => m.Embed = embed);
+        };
+
+        if (FeedSvc.ValidatableFeeds.Contains(job.Name))
+        {
+            msg = await ReplyAsync(embed: new EmbedBuilder()
+            {
+                Title = "Validating...",
+                Color = Color.Blue,
+            }.Build());
+            // todo: use something normal
+            job.Id = RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue).ToString();
+            FeedSvc.ValidateCallbacks.Add(job.Id, async validateResult =>
+            {
+                if (validateResult.Valid)
+                    await callback();
+                else
+                    await msg.ModifyAsync(m => m.Embed = new EmbedBuilder()
+                    {
+                        Title = "Validation Failed",
+                        Description = validateResult.Error,
+                        Color = Color.Red,
+                    }.Build());
+            });
+            await FeedSvc.Client.Http.PostAsJsonAsync("/jobs/validate", job);
+            return;
+        }
+
+        await callback();
     }
 }

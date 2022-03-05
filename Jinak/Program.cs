@@ -26,13 +26,14 @@ public static class Program
         LogPres = new()
         {
             new LogTypeLogPre(),
-            new TimeLogPre{Format = "HH:mm:ss:fff"},
+            new TimeLogPre { Format = "HH:mm:ss:fff" },
         }
     };
 
     public static Config Config;
     public static DiscordSocketClient Discord;
     public static CommandHandler CommandHandler { get; private set; }
+    public static ITextChannel? LogChannel;
 
     public static async Task Main()
     {
@@ -47,20 +48,21 @@ public static class Program
 #endif
         Console.Configure.EnableVirtualTerminalProcessing();
         Console.LogTypes.Error.LogPreStyle.AnsiStyle |= AnsiStyle.Invert;
-        Console.LogTypes.TraditionalsAddPre(new TimeLogPre(){Format = "HH:mm:ss:fff"});
-        var wh = new DiscordWebhookClient(
-            "https://discord.com/api/webhooks/938603387853869126/PaLBJPlU0PT4sviiZtJQd6CLoxFGvI1KP14JUaZg5ZLUwGb19h39j4H_BLCoelnRZk72");
+        Console.LogTypes.TraditionalsAddPre(new TimeLogPre() { Format = "HH:mm:ss:fff" });
         Console.Logger.LogFunction = (in LogContext context) =>
         {
-            // wh.SendMessageAsync(embeds: new List<Embed>()
-            // {
-            //     new EmbedBuilder()
-            //     {
-            //         Title = context.LogType.Name,
-            //         Description = context.Message.ToString(),
-            //         Color = context.LogType.LogPreStyle.ForegroundColor.ToDiscordColor()
-            //     }.Build()
-            // });
+            if ((context.LogType?.LogLevel > LogLevel.Debug || context.ExtraContext is DiscordLogPreContext
+                {
+                    Message.Severity: < LogSeverity.Verbose
+                }) && LogChannel is not null)
+                LogChannel.SendMessageAsync(embed:
+                    new EmbedBuilder
+                    {
+                        Title = context.LogType?.Name,
+                        Description = context.Message.ToString(),
+                        Color = context.LogType?.LogPreStyle?.ForegroundColor.ToDiscordColor()
+                    }.Build()
+                );
             Console.Logger.AnsiConsoleLogFunction(context);
         };
         DiscordLogType.LogPres!.Add(new DiscordLogPre());

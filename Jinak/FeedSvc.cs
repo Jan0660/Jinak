@@ -13,10 +13,22 @@ public static class FeedSvc
 {
     public static OzseClient Client { get; set; }
 
+    public static Dictionary<string, Func<ValidateJobResult, Task>> ValidateCallbacks { get; } = new();
+
+    // todo(cleanup)
+    public static readonly string[] ValidatableFeeds = { "npm" };
+
     public class Packet
     {
         public string Type { get; set; }
         public JObject Data { get; set; }
+    }
+
+    public class ValidateJobResult
+    {
+        public bool Valid { get; set; }
+        public string? Error { get; set; }
+        public Job Job { get; set; }
     }
 
     public static void Start()
@@ -28,6 +40,7 @@ public static class FeedSvc
             foreach (var result in await Client.GetResultsAsync())
                 await HandleResult(result);
         }
+
         Task.Run(async () =>
         {
             await HandleLost();
@@ -49,14 +62,31 @@ public static class FeedSvc
             {
                 // todo(perf): use System.Text.Json
                 var packet = JsonConvert.DeserializeObject<Packet>(Encoding.UTF8.GetString(ws.Buffer[..result.Count]),
-                    new JsonSerializerSettings(){ContractResolver = new CamelCasePropertyNamesContractResolver()});
+                    new JsonSerializerSettings() { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                 Console.Debug(packet.Type);
-                var r = packet.Data.ToObject<Result>(new JsonSerializer()
+                switch (packet.Type)
                 {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
-                });
-                Console.Debug(r);
-                HandleResult(r);
+                    case "new-result":
+                    {
+                        var r = packet.Data.ToObject<Result>(new JsonSerializer()
+                        {
+                            ContractResolver = new CamelCasePropertyNamesContractResolver()
+                        });
+                        Console.Debug(r);
+                        HandleResult(r);
+                        break;
+                    }
+                    case "job-validated":
+                    {
+                        var r = packet.Data.ToObject<ValidateJobResult>(new JsonSerializer()
+                        {
+                            ContractResolver = new CamelCasePropertyNamesContractResolver()
+                        });
+                        Console.Debug(r);
+                        ValidateCallbacks[r.Job.Id]?.Invoke(r);
+                        break;
+                    }
+                }
             }
         };
 

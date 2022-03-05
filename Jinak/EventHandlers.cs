@@ -15,6 +15,7 @@ public static class EventHandlers
     public static Task Ready()
     {
         Console.Info("Ready!");
+        Program.LogChannel = Program.Discord.GetChannel(Program.Config.LogChannel) as ITextChannel;
         return Task.CompletedTask;
     }
 }
