@@ -5,9 +5,7 @@ namespace Jinak;
 
 public class GuildSettings
 {
-    [BsonId]
-    [BsonElement("_id")]
-    public ulong Id { get; set; }
+    [BsonId] [BsonElement("_id")] public ulong Id { get; set; }
 
     public static readonly GuildSettings DMSettings = new() { };
 

@@ -27,7 +27,7 @@ public class JanWebSocketClient
         Client = new();
         await Client.ConnectAsync(new Uri(Url), cancellationToken);
         ReadLoopCancellation = new CancellationTokenSource();
-        
+
         Task.Run(async () =>
         {
             while (true)
@@ -41,6 +41,7 @@ public class JanWebSocketClient
                         _disconnected();
                         break;
                     }
+
                     OnMessage?.Invoke(result);
                 }
                 catch (Exception exc)

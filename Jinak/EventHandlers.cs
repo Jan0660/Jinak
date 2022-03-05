@@ -38,7 +38,7 @@ public class DiscordLogPre : LogPre
         Style ??= new();
         if (context.ExtraContext is DiscordLogPreContext c)
         {
-            if(c.Message.Exception != null)
+            if (c.Message.Exception != null)
                 Console.Error(c.Message.Exception);
             Style.ForegroundColor = c.Message.Severity switch
             {

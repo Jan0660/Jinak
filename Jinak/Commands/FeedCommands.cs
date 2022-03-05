@@ -128,6 +128,7 @@ public class FeedCommands : BetterModuleBase
         }
 
         IUserMessage? msg = null;
+
         async Task callback()
         {
             job = await FeedSvc.Client.CreateJobAsync(job).PerfLog("create job");
@@ -148,7 +149,7 @@ public class FeedCommands : BetterModuleBase
                 await ReplyAsync(embed: embed);
             else
                 await msg.ModifyAsync(m => m.Embed = embed);
-        };
+        }
 
         if (FeedSvc.ValidatableFeeds.Contains(job.Name))
         {

@@ -82,6 +82,7 @@ public class UtilityCommands : BetterModuleBase
             await ReplyAsync("tfw no attachments");
             return;
         }
+
         var url = Context.Message.Attachments.First().ProxyUrl;
         var (isAnime, certainty, evaluationTime) =
             await IsAnimeRequest(url);
