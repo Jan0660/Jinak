@@ -39,7 +39,7 @@ public class DiscordLogPre : LogPre
         if (context.ExtraContext is DiscordLogPreContext c)
         {
             if (c.Message.Exception != null)
-                Console.Error(c.Message.Exception);
+                Console.Error(c.Message.Exception.ToString());
             Style.ForegroundColor = c.Message.Severity switch
             {
                 LogSeverity.Critical => Color.DarkRed,

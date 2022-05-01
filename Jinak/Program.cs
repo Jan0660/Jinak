@@ -1,15 +1,13 @@
 ﻿global using Console = Log73.Console;
 global using Log73;
-using System.Buffers;
-// ReSharper disable once RedundantUsingDirective.Global
 using System.Text.Json;
-using Discord.WebSocket;
 using Discord;
 using Discord.Commands;
-using Discord.Webhook;
+using Discord.WebSocket;
 using Jinak.CommandHandling;
 using Log73.LogPres;
 using Log73.Serialization.NewtonsoftJson;
+// ReSharper disable once RedundantUsingDirective.Global
 
 namespace Jinak;
 
@@ -47,8 +45,7 @@ public static class Program
         Console.Options.LogLevel = LogLevel.Debug;
 #endif
         Console.Configure.EnableVirtualTerminalProcessing();
-        Console.LogTypes.Error.LogPreStyle.AnsiStyle |= AnsiStyle.Invert;
-        Console.LogTypes.TraditionalsAddPre(new TimeLogPre() { Format = "HH:mm:ss:fff" });
+        Console.LogTypes.TraditionalsAddPre(new TimeLogPre() { Format = "HH:mm:ss:ffffff" });
         Console.Logger.LogFunction = (in LogContext context) =>
         {
             if ((context.LogType?.LogLevel > LogLevel.Debug || context.ExtraContext is DiscordLogPreContext

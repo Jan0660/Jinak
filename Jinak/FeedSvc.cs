@@ -1,10 +1,11 @@
 ﻿using System.Net.WebSockets;
-using System.Text;
 using Discord;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Ozse;
+using Ozse.Results;
+using Websocket.Client;
 
 namespace Jinak;
 
@@ -16,7 +17,7 @@ public static class FeedSvc
     public static Dictionary<string, Func<ValidateJobResult, Task>> ValidateCallbacks { get; } = new();
 
     // todo(cleanup)
-    public static readonly string[] ValidatableFeeds = { "npm" };
+    public static readonly string[] ValidatableFeeds = { "npm", "pubdev", "github", "twitter", "youtube", "twitch" };
 
     public class Packet
     {
@@ -37,31 +38,29 @@ public static class FeedSvc
 
         async Task HandleLost()
         {
+            Console.Debug("Feed handle lost");
             foreach (var result in await Client.GetResultsAsync())
                 await HandleResult(result);
         }
 
-        Task.Run(async () =>
-        {
-            await HandleLost();
-            Task.Delay(60 * 1000).ContinueWith(async _ => await HandleLost());
-        });
-        var ws = new JanWebSocketClient(Program.Config.OzseUrl.Replace("http", "ws") + "/ws");
-        ws.OnReadException += exc =>
-        {
-            Console.Error($"Feed WS Read: {exc}");
-            Task.Run(async () =>
-            {
-                ws.Client.Abort();
-                Connect();
-            });
-        };
-        ws.OnMessage = result =>
+        DumbTimer.Start("FeedHandleLost", 60_000, () => HandleLost());
+
+        var ws = new WebsocketClient(new Uri(Program.Config.OzseUrl.Replace("http", "ws") + "/ws"));
+        // ws.OnReadException += exc =>
+        // {
+        //     Console.Error($"Feed WS Read: {exc}");
+        //     Task.Run(async () =>
+        //     {
+        //         ws.Client.Abort();
+        //         Connect();
+        //     });
+        // };
+        ws.MessageReceived += result =>
         {
             if (result.MessageType == WebSocketMessageType.Text)
             {
                 // todo(perf): use System.Text.Json
-                var packet = JsonConvert.DeserializeObject<Packet>(Encoding.UTF8.GetString(ws.Buffer[..result.Count]),
+                var packet = JsonConvert.DeserializeObject<Packet>(result.Text,
                     new JsonSerializerSettings() { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                 Console.Debug(packet.Type);
                 switch (packet.Type)
@@ -88,27 +87,54 @@ public static class FeedSvc
                     }
                 }
             }
+
+            return Task.CompletedTask;
         };
 
-        void Connect()
+        ws.ReconnectTimeout = TimeSpan.FromSeconds(50);
+        ws.ReconnectionHappened += _ =>
         {
-            ws.ConnectAsync().ContinueWith(t =>
+            Console.Debug("Reconnected");
+            return Task.CompletedTask;
+        };
+        ws.DisconnectionHappened += _ =>
+        {
+            Console.Debug("Disconnected");
+            return Task.CompletedTask;
+        };
+        // todo(perf)
+        // todo: save ping time
+        DumbTimer.Start("FeedWsPing", 30_000, () => ws.Send(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            type = "ping",
+            data = new
             {
-                if (t.Exception is null)
-                    Console.Debug("Feed WS Connected");
-                else
-                {
-                    Console.Debug($"Feed WS Connection failed");
-                    Task.Delay(1000).ContinueWith(_ => Connect());
-                }
-            });
-        }
+                time = DateTimeOffset.Now.ToUnixTimeMilliseconds()
+            }
+        })));
 
-        Connect();
+        ws.Start();
+
+        // void Connect()
+        // {
+        //     ws.ConnectAsync().ContinueWith(t =>
+        //     {
+        //         if (t.Exception is null)
+        //             Console.Debug("Feed WS Connected");
+        //         else
+        //         {
+        //             Console.Debug($"Feed WS Connection failed");
+        //             Task.Delay(1000).ContinueWith(_ => Connect());
+        //         }
+        //     });
+        // }
+        //
+        // Connect();
     }
 
     public static async Task HandleResult(Result result)
     {
+        Console.Debug($"feed svc handling: {result.Id}");
         var job = await Client.GetJobAsync(result.JobId);
         var feedSettings = Mongo.FeedCollection.GetOne(f => f.JobId == job.Id);
         if (feedSettings == null)
@@ -259,6 +285,21 @@ This release comes with {release.Assets.Length} assets.
                 await channel.SendMessageAsync(data.Tweet.PermanentUrl);
                 break;
             }
+            case "youtube":
+            {
+                var data = (YouTubeResult)result.ParseData()!;
+                await channel.SendMessageAsync($"https://youtu.be/{data.Id}", allowedMentions: new());
+                break;
+            }
+            case "twitch":
+            {
+                var data = (TwitchResult)result.ParseData()!;
+                if (data.Type != "goOnline")
+                    break;
+                await channel.SendMessageAsync($"{data.Item.UserName} is live! https://twitch.tv/{data.Item.UserLogin}",
+                    allowedMentions: new());
+                break;
+            }
             default:
             {
                 await channel.SendMessageAsync($"{result.Id}: {result.Data["link"]}");
@@ -266,6 +307,6 @@ This release comes with {release.Assets.Length} assets.
             }
         }
 
-        Console.Debug($"feed svc result: {result.Id}");
+        Console.Debug($"feed svc handled: {result.Id}");
     }
 }
