@@ -7,4 +7,5 @@ public class Config
     public string MongoDatabase { get; set; }
     public string OzseUrl { get; set; }
     public ulong LogChannel { get; set; }
+    public string AnimeAiUrl { get; set; }
 }

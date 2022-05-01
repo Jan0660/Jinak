@@ -15,7 +15,7 @@ public static class DumbTimer
         {
             Name = name,
             Callback = callback,
-            Timer = new System.Timers.Timer(interval)
+            Timer = new Timer(interval)
         };
         Timers.Add(data);
         data.Timer.Elapsed += (_, _) =>
@@ -25,7 +25,6 @@ public static class DumbTimer
                 data.Callback();
                 data.LastException = null;
                 Console.Debug($"Timer {name} executed successfully");
-                ;
             }
             catch (Exception exc)
             {
